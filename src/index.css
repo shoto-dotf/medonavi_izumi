@@ -4,40 +4,45 @@
 @tailwind components;
 @tailwind utilities;
 
-/* カスタム変数 */
+/* カスタム変数 - Premium Design */
 :root {
-  --primary-color: #0088cc;
-  --secondary-color: #36a9e0;
-  --accent-color: #ff99aa;
-  --background-color: #F8F9FA;
-  --text-color: #333333;
-  --subtext-color: #6C757D;
-  --border-color: #DEE2E6;
-  --hover-primary: #0077b3;
-  --selected-bg: #e6f3fa;
+  --primary-color: #1a365d;
+  --secondary-color: #2c5282;
+  --accent-color: #d69e2e;
+  --accent-hover: #b7791f;
+  --background-color: #fafafa;
+  --text-color: #1a202c;
+  --subtext-color: #4a5568;
+  --border-color: #e2e8f0;
+  --hover-primary: #2d3748;
+  --selected-bg: #f7fafc;
+  --gradient-start: #1a365d;
+  --gradient-end: #2d3748;
 }
 
 @layer components {
   /* 全体のスタイリング */
   body {
-    @apply font-sans text-gray-800 bg-gray-50;
+    @apply font-sans text-gray-800 bg-gradient-to-br from-gray-50 via-white to-gray-100;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
 
   /* サイドバー */
   .sidebar {
-    @apply bg-[#0088cc] text-white w-64 h-screen flex flex-col shadow-md;
+    @apply text-white w-64 h-screen flex flex-col shadow-2xl;
+    background: linear-gradient(180deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
   }
 
   .sidebar-header {
-    @apply p-4 border-b border-white/20;
+    @apply p-6 border-b border-white/10;
   }
 
   .sidebar-menu-item {
-    @apply flex items-center px-4 py-3 cursor-pointer transition-colors duration-200 hover:bg-white/10;
+    @apply flex items-center px-6 py-4 cursor-pointer transition-all duration-300 hover:bg-white/10 hover:pl-8;
   }
 
   .sidebar-menu-item.active {
-    @apply bg-[#36a9e0] border-l-4 border-white;
+    @apply bg-white/20 border-l-4 border-[var(--accent-color)];
   }
 
   .sidebar-menu-item-icon {
@@ -53,16 +58,16 @@
   }
 
   .resource-item {
-    @apply flex items-center p-2 m-2 rounded bg-white/10 hover:bg-white/20 transition-colors duration-200;
+    @apply flex items-center p-3 m-3 rounded-lg bg-white/5 hover:bg-white/15 transition-all duration-300 backdrop-blur-sm;
   }
 
   /* チャットエリア */
   .chat-area {
-    @apply flex flex-col h-screen bg-gray-50;
+    @apply flex flex-col h-screen bg-gradient-to-br from-gray-50 to-white;
   }
 
   .chat-header {
-    @apply bg-white border-b border-gray-200 p-4 flex items-center shadow-sm;
+    @apply bg-white/80 backdrop-blur-md border-b border-gray-200/50 p-6 flex items-center shadow-lg;
   }
 
   .chat-messages {
@@ -70,23 +75,23 @@
   }
 
   .chat-message {
-    @apply max-w-[70%] p-3 rounded-xl shadow-sm mb-4;
+    @apply max-w-[70%] p-4 rounded-2xl shadow-md mb-4 transition-all duration-300 hover:shadow-lg;
   }
 
   .chat-message-user {
-    @apply ml-auto bg-[#e6f3fa] rounded-br-sm;
+    @apply ml-auto bg-gradient-to-br from-blue-50 to-blue-100 rounded-br-sm border border-blue-200/50;
   }
 
   .chat-message-ai {
-    @apply bg-white border-l-4 border-[#0088cc] rounded-bl-sm;
+    @apply bg-white border-l-4 border-[var(--accent-color)] rounded-bl-sm shadow-lg;
   }
 
   .chat-input-container {
-    @apply p-4 border-t border-gray-200 bg-white;
+    @apply p-6 border-t border-gray-200/50 bg-white/80 backdrop-blur-md;
   }
 
   .chat-input-wrapper {
-    @apply flex items-end gap-2 rounded-3xl border border-gray-200 bg-gray-50 p-2 transition-all duration-300 focus-within:border-[#0088cc] focus-within:shadow-[0_0_0_2px_rgba(0,136,204,0.1)];
+    @apply flex items-end gap-3 rounded-full border border-gray-300 bg-white p-3 transition-all duration-300 focus-within:border-[var(--accent-color)] focus-within:shadow-[0_0_0_3px_rgba(214,158,46,0.2)];
   }
 
   .chat-input {
@@ -94,7 +99,7 @@
   }
 
   .chat-send-button {
-    @apply p-2 rounded-full bg-[#ff99aa] text-white hover:bg-[#ff8599] transition-colors duration-200;
+    @apply p-3 rounded-full bg-gradient-to-r from-[var(--accent-color)] to-[var(--accent-hover)] text-white hover:shadow-lg transition-all duration-300 transform hover:scale-105;
   }
 
   .chat-send-button-disabled {
@@ -124,6 +129,35 @@
 
   .modal-button {
     @apply bg-[#ff99aa] hover:bg-[#ff8599] text-white px-4 py-2 rounded transition-colors duration-200;
+  }
+
+  /* アニメーション */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+  
+  .animate-fadeIn {
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse 3s ease-in-out infinite;
   }
 
   /* ログイン画面 */

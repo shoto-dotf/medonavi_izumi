@@ -28,9 +28,9 @@ const ChatArea: React.FC = () => {
   }, [messages]);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <div className="bg-white border-b border-gray-200 p-4">
-        <h2 className="text-lg font-medium text-gray-800">
+    <div className="flex flex-col h-full overflow-hidden bg-gradient-to-br from-gray-50 to-white">
+      <div className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 px-6 py-5 shadow-sm">
+        <h2 className="text-xl font-semibold bg-gradient-to-r from-blue-900 to-blue-700 bg-clip-text text-transparent">
           {getAILabel(selectedAI)}に質問中
         </h2>
       </div>
@@ -39,19 +39,19 @@ const ChatArea: React.FC = () => {
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-gray-500">
             {showGuide && (
-              <div className="max-w-lg mx-auto p-4 mb-4 bg-blue-50 border border-blue-200 rounded-lg relative">
+              <div className="max-w-lg mx-auto p-6 mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/50 rounded-xl relative shadow-lg">
                 <button
                   onClick={() => setShowGuide(false)}
-                  className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+                  className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-5 w-5" />
                 </button>
-                <p className="text-blue-800">
+                <p className="text-blue-900 font-medium">
                   左側のメニューから質問したいAIを選択してから、このチャットエリアで質問を入力してください
                 </p>
               </div>
             )}
-            <p className="text-center max-w-md px-4">
+            <p className="text-center max-w-md px-4 text-gray-600 font-medium">
               {getAILabel(selectedAI)}にメッセージを送信してください。
             </p>
           </div>
@@ -61,9 +61,9 @@ const ChatArea: React.FC = () => {
               <ChatMessage key={message.id} message={message} />
             ))}
             {isLoading && (
-              <div className="p-4 text-center text-gray-500">
-                <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
-                <p className="mt-2">回答を生成中...</p>
+              <div className="p-6 text-center">
+                <div className="inline-block h-8 w-8 animate-spin rounded-full border-3 border-amber-200 border-t-amber-600"></div>
+                <p className="mt-3 text-gray-600 font-medium">回答を生成中...</p>
               </div>
             )}
             <div ref={messagesEndRef} />

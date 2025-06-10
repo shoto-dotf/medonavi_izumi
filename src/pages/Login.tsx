@@ -28,27 +28,30 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="px-6 py-8">
-            <div className="flex flex-col items-center justify-center mb-6">
-              <div className="bg-blue-100 p-3 rounded-full">
-                <Stethoscope className="h-10 w-10 text-blue-600" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-4">
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent"></div>
+      </div>
+      <div className="w-full max-w-md relative z-10">
+        <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden border border-white/20">
+          <div className="px-8 py-10">
+            <div className="flex flex-col items-center justify-center mb-8">
+              <div className="bg-gradient-to-br from-amber-400 to-amber-600 p-4 rounded-full shadow-lg transform hover:scale-105 transition-transform duration-300">
+                <Stethoscope className="h-12 w-12 text-white" />
               </div>
-              <h1 className="mt-4 text-2xl font-bold text-gray-800">メドナビAI</h1>
-              <p className="mt-1 text-gray-500">社内FAQ質問システム</p>
+              <h1 className="mt-6 text-3xl font-bold bg-gradient-to-r from-blue-200 to-blue-400 bg-clip-text text-transparent">メドナビAI</h1>
+              <p className="mt-2 text-blue-200/80">社内FAQ質問システム</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
               {error && (
-                <div className="p-3 bg-red-50 border-l-4 border-red-500 text-sm text-red-700">
+                <div className="p-4 bg-red-500/10 backdrop-blur-sm border border-red-500/20 rounded-lg text-sm text-red-300">
                   {error}
                 </div>
               )}
 
               <div>
-                <label htmlFor="userId" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="userId" className="block text-sm font-medium text-blue-200 mb-2">
                   ユーザーID
                 </label>
                 <input
@@ -56,13 +59,14 @@ const Login: React.FC = () => {
                   type="text"
                   value={userId}
                   onChange={(e) => setUserId(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
+                  placeholder="IDを入力"
                   required
                 />
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="password" className="block text-sm font-medium text-blue-200 mb-2">
                   パスワード
                 </label>
                 <input
@@ -70,7 +74,8 @@ const Login: React.FC = () => {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-300"
+                  placeholder="パスワードを入力"
                   required
                 />
               </div>
@@ -78,15 +83,13 @@ const Login: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className={`w-full py-2 px-4 rounded-md text-white font-medium ${
-                  isLoading
-                    ? 'bg-blue-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700'
-                } transition-colors`}
+                className={`w-full py-3 px-6 rounded-lg text-slate-900 font-semibold bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 transform hover:scale-[1.02] transition-all duration-300 shadow-lg hover:shadow-xl ${
+                  isLoading ? 'opacity-70 cursor-not-allowed' : ''
+                }`}
               >
                 {isLoading ? (
                   <span className="flex items-center justify-center">
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-slate-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
@@ -99,8 +102,8 @@ const Login: React.FC = () => {
             </form>
           </div>
 
-          <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
-            <p className="text-xs text-center text-gray-500">
+          <div className="px-8 py-6 bg-white/5 border-t border-white/10">
+            <p className="text-xs text-center text-blue-200/60">
               ※実際のサービスでは、社内システム管理者に<br />アカウント発行をご依頼ください。
             </p>
           </div>

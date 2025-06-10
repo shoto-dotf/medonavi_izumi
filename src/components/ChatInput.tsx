@@ -37,11 +37,11 @@ const ChatInput: React.FC = () => {
   };
 
   return (
-    <div className="p-4 border-t border-gray-200 bg-white">
-      <div className="flex items-end gap-2 rounded-lg border border-gray-300 bg-white p-2 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition">
+    <div className="p-6 border-t border-gray-200/50 bg-white/80 backdrop-blur-md">
+      <div className="flex items-end gap-3 rounded-full border border-gray-300 bg-gradient-to-r from-gray-50 to-white p-3 shadow-lg focus-within:ring-2 focus-within:ring-amber-500 focus-within:border-amber-500 transition-all duration-300">
         <textarea
           ref={textareaRef}
-          className="flex-1 max-h-[120px] resize-none border-0 bg-transparent p-1 outline-none"
+          className="flex-1 max-h-[120px] resize-none border-0 bg-transparent px-4 py-2 outline-none text-gray-800 placeholder-gray-500"
           placeholder="メッセージを入力してください (Shift + Enter で送信)"
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -51,10 +51,10 @@ const ChatInput: React.FC = () => {
         />
         
         <button
-          className={`p-2 rounded-full ${
+          className={`p-3 rounded-full transition-all duration-300 transform ${
             input.trim() && !isLoading
-              ? 'text-blue-600 hover:bg-blue-50'
-              : 'text-gray-400 cursor-not-allowed'
+              ? 'bg-gradient-to-r from-amber-400 to-amber-600 text-white hover:shadow-lg hover:scale-105'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
           }`}
           onClick={handleSubmit}
           disabled={!input.trim() || isLoading}
@@ -63,7 +63,7 @@ const ChatInput: React.FC = () => {
         </button>
       </div>
       
-      <div className="mt-2 text-xs text-gray-500 text-center">
+      <div className="mt-3 text-xs text-gray-500 text-center font-medium">
         Shift + Enter で送信
       </div>
     </div>
