@@ -1,0 +1,219 @@
+/* index.css - メドナビAIのスタイル */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* カスタム変数 - Premium Design */
+:root {
+  --primary-color: #1a365d;
+  --secondary-color: #2c5282;
+  --accent-color: #d69e2e;
+  --accent-hover: #b7791f;
+  --background-color: #fafafa;
+  --text-color: #1a202c;
+  --subtext-color: #4a5568;
+  --border-color: #e2e8f0;
+  --hover-primary: #2d3748;
+  --selected-bg: #f7fafc;
+  --gradient-start: #1a365d;
+  --gradient-end: #2d3748;
+}
+
+@layer components {
+  /* 全体のスタイリング */
+  body {
+    @apply font-sans text-gray-800 bg-gradient-to-br from-gray-50 via-white to-gray-100;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  /* サイドバー */
+  .sidebar {
+    @apply text-white w-64 h-screen flex flex-col shadow-2xl;
+    background: linear-gradient(180deg, var(--gradient-start) 0%, var(--gradient-end) 100%);
+  }
+
+  .sidebar-header {
+    @apply p-6 border-b border-white/10;
+  }
+
+  .sidebar-menu-item {
+    @apply flex items-center px-6 py-4 cursor-pointer transition-all duration-300 hover:bg-white/10 hover:pl-8;
+  }
+
+  .sidebar-menu-item.active {
+    @apply bg-white/20 border-l-4 border-[var(--accent-color)];
+  }
+
+  .sidebar-menu-item-icon {
+    @apply mr-3 h-5 w-5;
+  }
+
+  .sidebar-divider {
+    @apply h-px bg-white/20 my-4;
+  }
+
+  .resources-section {
+    @apply mt-auto border-t border-white/20;
+  }
+
+  .resource-item {
+    @apply flex items-center p-3 m-3 rounded-lg bg-white/5 hover:bg-white/15 transition-all duration-300 backdrop-blur-sm;
+  }
+
+  /* チャットエリア */
+  .chat-area {
+    @apply flex flex-col h-screen bg-gradient-to-br from-gray-50 to-white;
+  }
+
+  .chat-header {
+    @apply bg-white/80 backdrop-blur-md border-b border-gray-200/50 p-6 flex items-center shadow-lg;
+  }
+
+  .chat-messages {
+    @apply flex-1 overflow-y-auto p-4;
+  }
+
+  .chat-message {
+    @apply max-w-[70%] p-4 rounded-2xl shadow-md mb-4 transition-all duration-300 hover:shadow-lg;
+  }
+
+  .chat-message-user {
+    @apply ml-auto bg-gradient-to-br from-blue-50 to-blue-100 rounded-br-sm border border-blue-200/50;
+  }
+
+  .chat-message-ai {
+    @apply bg-white border-l-4 border-[var(--accent-color)] rounded-bl-sm shadow-lg;
+  }
+
+  .chat-input-container {
+    @apply p-6 border-t border-gray-200/50 bg-white/80 backdrop-blur-md;
+  }
+
+  .chat-input-wrapper {
+    @apply flex items-end gap-3 rounded-full border border-gray-300 bg-white p-3 transition-all duration-300 focus-within:border-[var(--accent-color)] focus-within:shadow-[0_0_0_3px_rgba(214,158,46,0.2)];
+  }
+
+  .chat-input {
+    @apply flex-1 max-h-[120px] resize-none border-0 bg-transparent p-2 outline-none;
+  }
+
+  .chat-send-button {
+    @apply p-3 rounded-full bg-gradient-to-r from-[var(--accent-color)] to-[var(--accent-hover)] text-white hover:shadow-lg transition-all duration-300 transform hover:scale-105;
+  }
+
+  .chat-send-button-disabled {
+    @apply p-2 rounded-full bg-gray-200 text-gray-400 cursor-not-allowed;
+  }
+
+  /* モーダル */
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/50 flex items-center justify-center z-50;
+  }
+
+  .modal-content {
+    @apply bg-white rounded-lg shadow-lg w-11/12 max-w-2xl max-h-[80vh] overflow-y-auto;
+  }
+
+  .modal-header {
+    @apply bg-[#0088cc] text-white px-4 py-3 flex items-center justify-between rounded-t-lg;
+  }
+
+  .modal-body {
+    @apply p-6;
+  }
+
+  .modal-footer {
+    @apply px-6 py-4 bg-gray-50 flex justify-end rounded-b-lg;
+  }
+
+  .modal-button {
+    @apply bg-[#ff99aa] hover:bg-[#ff8599] text-white px-4 py-2 rounded transition-colors duration-200;
+  }
+
+  /* アニメーション */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+  
+  .animate-fadeIn {
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse 3s ease-in-out infinite;
+  }
+
+  /* ログイン画面 */
+  .login-container {
+    @apply min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-[#e6f3fa] relative overflow-hidden;
+  }
+
+  .login-background-blob-1 {
+    @apply absolute top-0 right-0 w-1/3 h-1/3 bg-[#0088cc] opacity-10 rounded-full blur-3xl transform translate-x-1/3 -translate-y-1/3;
+  }
+
+  .login-background-blob-2 {
+    @apply absolute bottom-0 left-0 w-1/3 h-1/3 bg-[#ff99aa] opacity-10 rounded-full blur-3xl transform -translate-x-1/3 translate-y-1/3;
+  }
+
+  .login-card {
+    @apply bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative z-10;
+  }
+
+  .login-input-wrapper {
+    @apply relative;
+  }
+
+  .login-input-icon {
+    @apply absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-500;
+  }
+
+  .login-input {
+    @apply block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0088cc] focus:border-[#0088cc] transition-all duration-300 outline-none;
+  }
+
+  .login-button {
+    @apply w-full bg-[#0088cc] hover:bg-[#0077b3] text-white font-medium py-2.5 px-4 rounded-lg transition-all duration-300 transform active:translate-y-0.5 shadow-sm;
+  }
+
+  /* Loading Spinner */
+  .loading-spinner {
+    @apply animate-spin rounded-full border-2 border-[#0088cc] border-t-transparent;
+  }
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .sidebar {
+    @apply fixed top-0 left-0 transform -translate-x-full transition-transform duration-300 ease-in-out z-50;
+  }
+  
+  .sidebar.open {
+    @apply translate-x-0;
+  }
+  
+  .chat-area {
+    @apply ml-0;
+  }
+  
+  .menu-toggle {
+    @apply fixed top-4 left-4 z-50 bg-[#0088cc] text-white rounded-full w-10 h-10 flex items-center justify-center shadow-md;
+  }
+}
