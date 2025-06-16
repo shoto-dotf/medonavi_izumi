@@ -542,19 +542,12 @@ const ManualManagement: React.FC = () => {
                               </div>
                             </div>
                             
-                            {manual.notionUrl && (
+                            {manual.notionUrl && manual.notionUrl.includes('notion.so') && (
                               <div className="mb-2 ml-8 lg:ml-9">
-                                <a 
-                                  href={manual.notionUrl} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  className="text-xs lg:text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1 break-all"
-                                >
-                                  <ExternalLink className="h-3 w-3 flex-shrink-0" />
-                                  <span className="truncate max-w-xs lg:max-w-lg xl:max-w-2xl">
-                                    {manual.notionUrl.length > 80 ? `${manual.notionUrl.substring(0, 80)}...` : manual.notionUrl}
-                                  </span>
-                                </a>
+                                <span className="text-xs lg:text-sm text-gray-500 flex items-center gap-1">
+                                  <Link className="h-3 w-3 flex-shrink-0" />
+                                  <span>Notionで管理されています</span>
+                                </span>
                               </div>
                             )}
                             
@@ -575,16 +568,14 @@ const ManualManagement: React.FC = () => {
                           </div>
 
                           <div className="flex items-center gap-2 xl:ml-4 flex-shrink-0">
-                            {manual.notionUrl && (
-                              <button
-                                onClick={() => window.open(manual.notionUrl, '_blank')}
-                                className="flex items-center gap-2 px-3 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors text-sm font-medium whitespace-nowrap"
-                                title="Notionで開く"
-                              >
-                                <ExternalLink className="h-4 w-4" />
-                                <span className="hidden sm:inline">開く</span>
-                              </button>
-                            )}
+                            <button
+                              onClick={() => window.open('https://www.notion.so/1cd3f0bae9be80d39922ef80780358e1', '_blank')}
+                              className="flex items-center gap-2 px-3 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors text-sm font-medium whitespace-nowrap"
+                              title="Notionデータベースで開く"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                              <span className="hidden sm:inline">Notionで見る</span>
+                            </button>
                           </div>
                         </div>
                       </div>
