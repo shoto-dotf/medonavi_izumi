@@ -155,11 +155,7 @@ A8: [回答を記載]`
     window.currentManualContent = template.content;
   };
 
-<<<<<<< HEAD
   // Step 2への遷移（Dify清書処理）
-=======
-  // Step 2への遷移（Dify Workflow API呼び出し）
->>>>>>> a726f7b690d8fc50aaf9f88bb77bfaacd56c19a1
   const proceedToStep2 = async () => {
     if (!originalText.trim()) {
       showNotificationMessage('マニュアル内容を入力してください', 'error');
@@ -172,7 +168,6 @@ A8: [回答を記載]`
     setError(null);
 
     try {
-<<<<<<< HEAD
       // Dify ワークフローAPIを使用して清書
       const refinedResult = await fetchDifyRefinement(originalText);
       setRefinedContent(refinedResult);
@@ -183,24 +178,6 @@ A8: [回答を記載]`
       console.error('清書処理エラー:', error);
       showNotificationMessage('清書処理に失敗しました', 'error');
       setIsLoading(false);
-=======
-      console.log('Starting Dify Workflow API call...');
-      const difyAPI = getDifyWorkflowAPI();
-      const refinedText = await difyAPI.refineText(userInput);
-      
-      console.log('Refined text received:', refinedText);
-      setRefinedContent(refinedText);
-      window.currentRefinedContent = refinedText;
-      
-      showNotificationMessage('テキストの清書が完了しました！', 'success');
-    } catch (error) {
-      console.error('Error during text refinement:', error);
-      const errorMessage = error instanceof Error ? error.message : 'テキスト清書に失敗しました';
-      setError(errorMessage);
-      showNotificationMessage(errorMessage, 'error');
-    } finally {
-      setIsLoading(false);
->>>>>>> a726f7b690d8fc50aaf9f88bb77bfaacd56c19a1
     }
   };
 
@@ -437,11 +414,7 @@ A8: [回答を記載]`
         <div className="flex justify-between max-w-2xl mx-auto mt-4 text-sm text-gray-600">
           <span>内容入力</span>
           <span>Dify清書</span>
-<<<<<<< HEAD
           <span>管理者申請</span>
-=======
-          <span>スライド生成</span>
->>>>>>> a726f7b690d8fc50aaf9f88bb77bfaacd56c19a1
         </div>
       </div>
 
@@ -546,10 +519,6 @@ A8: [回答を記載]`
                 <div className="text-center">
                   <Loader className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
                   <p className="text-gray-600">Difyワークフローで内容を清書・構造化中...</p>
-<<<<<<< HEAD
-=======
-                  <p className="text-sm text-gray-500 mt-2">API処理中です。しばらくお待ちください。</p>
->>>>>>> a726f7b690d8fc50aaf9f88bb77bfaacd56c19a1
                   <div className="flex justify-center mt-2">
                     <div className="flex space-x-1">
                       <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
@@ -587,11 +556,7 @@ A8: [回答を記載]`
 
                 {/* 清書後の内容 */}
                 <div>
-<<<<<<< HEAD
                   <h3 className="font-semibold text-gray-700 mb-3">【清書後の内容】</h3>
-=======
-                  <h3 className="font-semibold text-gray-700 mb-3">清書後の内容 (Dify処理済み)</h3>
->>>>>>> a726f7b690d8fc50aaf9f88bb77bfaacd56c19a1
                   <div className="bg-green-50 rounded-lg p-4 h-96 overflow-y-auto">
                     <div className="prose prose-sm max-w-none">
                       <pre className="whitespace-pre-wrap text-sm text-gray-800">
