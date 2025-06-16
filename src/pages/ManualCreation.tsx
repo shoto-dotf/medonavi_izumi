@@ -27,6 +27,7 @@ const ManualCreation: React.FC = () => {
   const [originalText, setOriginalText] = useState('');
   const [refinedContent, setRefinedContent] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('calculation');
+  const [error, setError] = useState<string | null>(null);
 
   // テンプレート定義
   const templates = {
@@ -154,7 +155,11 @@ A8: [回答を記載]`
     window.currentManualContent = template.content;
   };
 
+<<<<<<< HEAD
   // Step 2への遷移（Dify清書処理）
+=======
+  // Step 2への遷移（Dify Workflow API呼び出し）
+>>>>>>> a726f7b690d8fc50aaf9f88bb77bfaacd56c19a1
   const proceedToStep2 = async () => {
     if (!originalText.trim()) {
       showNotificationMessage('マニュアル内容を入力してください', 'error');
@@ -164,8 +169,10 @@ A8: [回答を記載]`
     window.currentManualContent = originalText;
     setCurrentStep(2);
     setIsLoading(true);
+    setError(null);
 
     try {
+<<<<<<< HEAD
       // Dify ワークフローAPIを使用して清書
       const refinedResult = await fetchDifyRefinement(originalText);
       setRefinedContent(refinedResult);
@@ -176,6 +183,24 @@ A8: [回答を記載]`
       console.error('清書処理エラー:', error);
       showNotificationMessage('清書処理に失敗しました', 'error');
       setIsLoading(false);
+=======
+      console.log('Starting Dify Workflow API call...');
+      const difyAPI = getDifyWorkflowAPI();
+      const refinedText = await difyAPI.refineText(userInput);
+      
+      console.log('Refined text received:', refinedText);
+      setRefinedContent(refinedText);
+      window.currentRefinedContent = refinedText;
+      
+      showNotificationMessage('テキストの清書が完了しました！', 'success');
+    } catch (error) {
+      console.error('Error during text refinement:', error);
+      const errorMessage = error instanceof Error ? error.message : 'テキスト清書に失敗しました';
+      setError(errorMessage);
+      showNotificationMessage(errorMessage, 'error');
+    } finally {
+      setIsLoading(false);
+>>>>>>> a726f7b690d8fc50aaf9f88bb77bfaacd56c19a1
     }
   };
 
@@ -232,77 +257,14 @@ A8: [回答を記載]`
   // ステップ間の移動
   const backToStep1 = () => {
     setCurrentStep(1);
+    setError(null);
   };
 
   const backToStep2 = () => {
     setCurrentStep(2);
   };
 
-  // モックデータ生成関数
-  const generateMockRefinedContent = (content: string): string => {
-    return `# マニュアル（AI清書版）
-
-## 概要
-${content.substring(0, 100)}...の内容をAIが清書・構造化しました。
-
-## 目的
-このマニュアルは業務の効率化と品質向上を目的としています。
-
-## 対象者
-- 新入スタッフ
-- 経験者の復習用
-- 業務引き継ぎ時の参考
-
-## 詳細手順
-
-### 準備段階
-1. **事前確認**
-   - 必要な資料の準備
-   - システムの動作確認
-   - 権限の確認
-
-2. **初期設定**
-   - ログイン
-   - 初期画面の確認
-   - 必要なモジュールの起動
-
-### 実行段階
-1. **メイン作業**
-   - データの入力
-   - 確認作業
-   - 保存処理
-
-2. **品質確認**
-   - ダブルチェック
-   - エラー確認
-   - 完了報告
-
-### 完了段階
-1. **後処理**
-   - システムからのログアウト
-   - 資料の整理
-   - 次回に向けた準備
-
-## 注意事項
-⚠️ **重要**: 患者情報の取り扱いには十分注意してください
-💡 **ヒント**: 不明な点は必ず上司に確認してください
-📋 **チェック**: 各ステップ完了後は必ず確認を行ってください
-
-## トラブルシューティング
-### よくある問題と解決方法
-1. **システムエラー**: 再ログインを試してください
-2. **データ保存失敗**: ネットワーク接続を確認してください
-3. **権限エラー**: 管理者に連絡してください
-
-## 関連資料
-- [基本操作マニュアル]
-- [緊急時対応手順]
-- [連絡先一覧]
-
----
-*GPT-4oにより清書・構造化されました*`;
-  };
-
+  // モックデータ生成関数（スライド生成用）
   const generateMockSlideHTML = (content: string): string => {
     return `<!DOCTYPE html>
 <html lang="ja">
@@ -377,11 +339,6 @@ ${content.substring(0, 100)}...の内容をAIが清書・構造化しました�
 </html>`;
   };
 
-  // ステップインジケーター更新
-  const updateStepIndicator = (step: number) => {
-    setCurrentStep(step);
-  };
-
   // 通知表示（既存システム統合）
   const showNotificationMessage = (message: string, type: 'success' | 'error' | 'info') => {
     const colors = {
@@ -402,6 +359,8 @@ ${content.substring(0, 100)}...の内容をAIが清書・構造化しました�
       border-left: 4px solid ${colors[type]};
       z-index: 3000;
       animation: slideIn 0.3s ease;
+      max-width: 400px;
+      word-wrap: break-word;
     `;
     notification.textContent = message;
     
@@ -410,7 +369,7 @@ ${content.substring(0, 100)}...の内容をAIが清書・構造化しました�
     setTimeout(() => {
       notification.style.animation = 'slideOut 0.3s ease';
       setTimeout(() => notification.remove(), 300);
-    }, 3000);
+    }, 5000);
   };
 
   // プレビュー表示
@@ -478,7 +437,11 @@ ${content.substring(0, 100)}...の内容をAIが清書・構造化しました�
         <div className="flex justify-between max-w-2xl mx-auto mt-4 text-sm text-gray-600">
           <span>内容入力</span>
           <span>Dify清書</span>
+<<<<<<< HEAD
           <span>管理者申請</span>
+=======
+          <span>スライド生成</span>
+>>>>>>> a726f7b690d8fc50aaf9f88bb77bfaacd56c19a1
         </div>
       </div>
 
@@ -569,7 +532,7 @@ ${content.substring(0, 100)}...の内容をAIが清書・構造化しました�
         </div>
       )}
 
-      {/* Step 2: GPT清書結果 */}
+      {/* Step 2: Dify清書結果 */}
       {currentStep === 2 && (
         <div className="space-y-6">
           <div className="bg-white rounded-xl shadow-lg p-6">
@@ -583,6 +546,10 @@ ${content.substring(0, 100)}...の内容をAIが清書・構造化しました�
                 <div className="text-center">
                   <Loader className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
                   <p className="text-gray-600">Difyワークフローで内容を清書・構造化中...</p>
+<<<<<<< HEAD
+=======
+                  <p className="text-sm text-gray-500 mt-2">API処理中です。しばらくお待ちください。</p>
+>>>>>>> a726f7b690d8fc50aaf9f88bb77bfaacd56c19a1
                   <div className="flex justify-center mt-2">
                     <div className="flex space-x-1">
                       <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
@@ -591,6 +558,20 @@ ${content.substring(0, 100)}...の内容をAIが清書・構造化しました�
                     </div>
                   </div>
                 </div>
+              </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FileText className="h-8 w-8 text-red-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-red-600 mb-2">エラーが発生しました</h3>
+                <p className="text-gray-600 mb-4">{error}</p>
+                <button
+                  onClick={backToStep1}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  入力画面に戻る
+                </button>
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -606,7 +587,11 @@ ${content.substring(0, 100)}...の内容をAIが清書・構造化しました�
 
                 {/* 清書後の内容 */}
                 <div>
+<<<<<<< HEAD
                   <h3 className="font-semibold text-gray-700 mb-3">【清書後の内容】</h3>
+=======
+                  <h3 className="font-semibold text-gray-700 mb-3">清書後の内容 (Dify処理済み)</h3>
+>>>>>>> a726f7b690d8fc50aaf9f88bb77bfaacd56c19a1
                   <div className="bg-green-50 rounded-lg p-4 h-96 overflow-y-auto">
                     <div className="prose prose-sm max-w-none">
                       <pre className="whitespace-pre-wrap text-sm text-gray-800">
@@ -619,7 +604,7 @@ ${content.substring(0, 100)}...の内容をAIが清書・構造化しました�
             )}
 
             {/* アクションボタン */}
-            {!isLoading && (
+            {!isLoading && !error && refinedContent && (
               <div className="flex justify-between mt-6">
                 <button
                   onClick={backToStep1}
