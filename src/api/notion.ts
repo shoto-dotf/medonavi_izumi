@@ -76,14 +76,22 @@ class NotionAPI {
     try {
       console.log('Fetching from Notion Database:', databaseId);
       
-      const response = await fetch(`${this.baseURL}/databases/${databaseId}/query`, {
+      // 本番環境ではNetlify Functionsを使用
+      const isProduction = window.location.hostname !== 'localhost';
+      const apiUrl = isProduction 
+        ? `/.netlify/functions/notion-proxy?database_id=${databaseId}`
+        : `${this.baseURL}/databases/${databaseId}/query`;
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
-        headers: {
+        headers: isProduction ? {
+          'Content-Type': 'application/json'
+        } : {
           'Authorization': `Bearer ${this.apiKey}`,
           'Notion-Version': '2022-06-28',
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
+        body: isProduction ? undefined : JSON.stringify({
           sorts: [
             {
               property: "マニュアル名",
