@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState } from 'react';
-import { AIType, ChatMessage, ChatState } from '../types';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { AIType, ChatMessage, ChatState, Manual } from '../types';
 import { fetchDifyResponse } from '../api/dify';
+import { getNotionAPI } from '../api/notion';
 const ChatContext = createContext<ChatState | undefined>(undefined);
 interface ChatProviderProps {
   children: React.ReactNode;
@@ -9,6 +10,53 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [selectedAI, setSelectedAI] = useState<AIType>('calculation');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [manuals, setManuals] = useState<Manual[]>([]);
+  const [availableManuals, setAvailableManuals] = useState<Manual[]>([]);
+
+  // Notionマニュアルデータを取得
+  useEffect(() => {
+    const loadManuals = async () => {
+      try {
+        const notionAPI = getNotionAPI();
+        const manualData = await notionAPI.fetchManualDatabase('DATABASE_ID');
+        
+        const convertedManuals: Manual[] = manualData.map((manual: any) => ({
+          id: manual.id,
+          title: manual.title,
+          category: manual.category,
+          url: manual.url,
+          lastSync: manual.lastSync,
+          status: manual.status
+        }));
+        
+        setManuals(convertedManuals);
+        setAvailableManuals(convertedManuals);
+      } catch (error) {
+        console.error('Failed to load manuals:', error);
+        // フォールバックデータを使用
+        setManuals([]);
+        setAvailableManuals([]);
+      }
+    };
+
+    loadManuals();
+  }, []);
+
+  // AIタイプに基づいてマニュアルをフィルタリング
+  useEffect(() => {
+    const categoryMap = {
+      'calculation': 'medical',
+      'clinic': 'reception', 
+      'checkup': 'health-check'
+    };
+    
+    const relevantCategory = categoryMap[selectedAI];
+    const filtered = manuals.filter(manual => 
+      manual.category === relevantCategory || manual.category === 'other'
+    );
+    
+    setAvailableManuals(filtered);
+  }, [selectedAI, manuals]);
   const sendMessage = async (content: string): Promise<void> => {
     if (!content.trim()) return;
     // ハッシュタグを追加するマッピング
@@ -57,15 +105,30 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   const clearMessages = (): void => {
     setMessages([]);
   };
+
+  // マニュアル検索機能
+  const searchManuals = (query: string): Manual[] => {
+    if (!query.trim()) return availableManuals;
+    
+    const lowercaseQuery = query.toLowerCase();
+    return manuals.filter(manual =>
+      manual.title.toLowerCase().includes(lowercaseQuery) ||
+      manual.category.toLowerCase().includes(lowercaseQuery)
+    );
+  };
+
   return (
     <ChatContext.Provider
       value={{
         messages,
         selectedAI,
         isLoading,
+        manuals,
+        availableManuals,
         setSelectedAI,
         sendMessage,
         clearMessages,
+        searchManuals,
       }}
     >
       {children}

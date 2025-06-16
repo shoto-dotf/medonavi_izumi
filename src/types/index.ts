@@ -10,6 +10,7 @@ export interface ChatMessage {
 export interface User {
   id: string;
   name: string;
+  role?: 'admin' | 'staff';
 }
 
 export interface AuthState {
@@ -19,11 +20,23 @@ export interface AuthState {
   logout: () => void;
 }
 
+export interface Manual {
+  id: string;
+  title: string;
+  category: string;
+  url: string;
+  lastSync: string;
+  status: 'synced' | 'outdated' | 'error';
+}
+
 export interface ChatState {
   messages: ChatMessage[];
   selectedAI: AIType;
   isLoading: boolean;
+  manuals: Manual[];
+  availableManuals: Manual[];
   setSelectedAI: (type: AIType) => void;
   sendMessage: (content: string) => Promise<void>;
   clearMessages: () => void;
+  searchManuals: (query: string) => Manual[];
 }

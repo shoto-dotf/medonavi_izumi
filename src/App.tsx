@@ -6,6 +6,10 @@ import Login from './pages/Login';
 import ChatPage from './pages/ChatPage';
 import ManualCreation from './pages/ManualCreation';
 import ManualManagement from './pages/ManualManagement';
+import AdminDashboard from './pages/AdminDashboard';
+import ApplicationStatus from './pages/ApplicationStatus';
+import NotionCallback from './pages/NotionCallback';
+import NotionIntegrationDemo from './pages/NotionIntegrationDemo';
 import MainLayout from './components/MainLayout';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -38,6 +42,28 @@ const AppContent: React.FC = () => {
           <ProtectedRoute>
             <MainLayout>
               <ManualManagement />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/admin" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <AdminDashboard />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/application-status" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ApplicationStatus />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/auth/notion/callback" element={<NotionCallback />} />
+        <Route path="/notion-demo" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <NotionIntegrationDemo />
             </MainLayout>
           </ProtectedRoute>
         } />

@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, ArrowRight, Save, FileText, CheckCircle, Download, Eye, Loader } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Save, FileText, CheckCircle, Download, Eye, Loader, Plus } from 'lucide-react';
+import { fetchDifyRefinement } from '../api/dify';
+import { createApplication } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 // Global state for manual content (as specified in requirements)
 declare global {
@@ -18,10 +21,12 @@ if (typeof window !== 'undefined') {
 }
 
 const ManualCreation: React.FC = () => {
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [userInput, setUserInput] = useState('');
+  const [originalText, setOriginalText] = useState('');
   const [refinedContent, setRefinedContent] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('calculation');
 
   // テンプレート定義
   const templates = {
@@ -127,7 +132,7 @@ A8: [回答を記載]`
     const savedDraft = localStorage.getItem('manualDraft');
     if (savedDraft) {
       const draft = JSON.parse(savedDraft);
-      setUserInput(draft.content || '');
+      setOriginalText(draft.content || '');
       window.currentManualContent = draft.content || '';
     }
   }, []);
@@ -135,7 +140,7 @@ A8: [回答を記載]`
   // 下書き保存
   const saveDraft = () => {
     const draft = {
-      content: userInput,
+      content: originalText,
       timestamp: new Date().toISOString()
     };
     localStorage.setItem('manualDraft', JSON.stringify(draft));
@@ -145,68 +150,83 @@ A8: [回答を記載]`
   // テンプレート挿入
   const insertTemplate = (type: keyof typeof templates) => {
     const template = templates[type];
-    setUserInput(template.content);
+    setOriginalText(template.content);
     window.currentManualContent = template.content;
   };
 
-  // Step 2への遷移（GPT清書処理）
+  // Step 2への遷移（Dify清書処理）
   const proceedToStep2 = async () => {
-    if (!userInput.trim()) {
+    if (!originalText.trim()) {
       showNotificationMessage('マニュアル内容を入力してください', 'error');
       return;
     }
 
-    window.currentManualContent = userInput;
+    window.currentManualContent = originalText;
     setCurrentStep(2);
     setIsLoading(true);
 
-    // モックGPT清書処理（2秒後にモックデータを表示）
-    setTimeout(() => {
-      const mockRefinedContent = generateMockRefinedContent(userInput);
-      setRefinedContent(mockRefinedContent);
-      window.currentRefinedContent = mockRefinedContent;
+    try {
+      // Dify ワークフローAPIを使用して清書
+      const refinedResult = await fetchDifyRefinement(originalText);
+      setRefinedContent(refinedResult);
+      window.currentRefinedContent = refinedResult;
       setIsLoading(false);
-    }, 2000);
-
-    // TODO: 実際のAPI実装時に以下のコードを使用
-    // try {
-    //   const response = await callDifyGPTAPI({
-    //     content: userInput,
-    //     task: 'refine_and_structure'
-    //   });
-    //   setRefinedContent(response.content);
-    //   window.currentRefinedContent = response.content;
-    //   setIsLoading(false);
-    // } catch (error) {
-    //   showNotificationMessage('清書処理に失敗しました', 'error');
-    //   setIsLoading(false);
-    // }
+      showNotificationMessage('Difyワークフローによる清書が完了しました', 'success');
+    } catch (error) {
+      console.error('清書処理エラー:', error);
+      showNotificationMessage('清書処理に失敗しました', 'error');
+      setIsLoading(false);
+    }
   };
 
-  // Step 3への遷移（Claude スライド生成）
+  // Step 3への遷移（管理者申請）
   const proceedToStep3 = async () => {
     setCurrentStep(3);
     setIsLoading(true);
 
-    // モックClaude スライド生成（3秒後に完了画面を表示）
-    setTimeout(() => {
-      const mockSlideHTML = generateMockSlideHTML(refinedContent);
-      window.generatedSlideHTML = mockSlideHTML;
-      setIsLoading(false);
-    }, 3000);
+    try {
+      // タイトルを生成（清書内容の最初の行または固定テキスト）
+      const firstLine = refinedContent.split('\n')[0].substring(0, 50);
+      const title = firstLine || `マニュアル申請 - ${new Date().toLocaleDateString('ja-JP')}`;
 
-    // TODO: 実際のAPI実装時に以下のコードを使用
-    // try {
-    //   const response = await callDifyClaudeAPI({
-    //     content: refinedContent,
-    //     task: 'generate_html_slides'
-    //   });
-    //   window.generatedSlideHTML = response.html;
-    //   setIsLoading(false);
-    // } catch (error) {
-    //   showNotificationMessage('スライド生成に失敗しました', 'error');
-    //   setIsLoading(false);
-    // }
+      // Supabaseに申請データを保存
+      if (user?.id) {
+        await createApplication({
+          title,
+          original_content: originalText,
+          refined_content: refinedContent,
+          category: selectedCategory,
+          submitted_by: user.id
+        });
+      } else {
+        // ユーザーが未認証の場合はローカルストレージに保存（フォールバック）
+        const applicationData = {
+          id: Date.now().toString(),
+          title,
+          original_content: originalText,
+          refined_content: refinedContent,
+          status: 'pending',
+          submitted_by: 'guest_user',
+          submitted_at: new Date().toISOString(),
+          category: selectedCategory
+        };
+
+        const existingApplications = JSON.parse(localStorage.getItem('manualApplications') || '[]');
+        existingApplications.push(applicationData);
+        localStorage.setItem('manualApplications', JSON.stringify(existingApplications));
+      }
+
+      // 申請完了処理
+      setTimeout(() => {
+        setIsLoading(false);
+        showNotificationMessage('管理者への申請が完了しました', 'success');
+      }, 1000);
+
+    } catch (error) {
+      console.error('申請処理エラー:', error);
+      showNotificationMessage('申請に失敗しました', 'error');
+      setIsLoading(false);
+    }
   };
 
   // ステップ間の移動
@@ -457,8 +477,8 @@ ${content.substring(0, 100)}...の内容をAIが清書・構造化しました�
         </div>
         <div className="flex justify-between max-w-2xl mx-auto mt-4 text-sm text-gray-600">
           <span>内容入力</span>
-          <span>GPT清書</span>
-          <span>スライド生成</span>
+          <span>Dify清書</span>
+          <span>管理者申請</span>
         </div>
       </div>
 
@@ -478,7 +498,10 @@ ${content.substring(0, 100)}...の内容をAIが清書・構造化しました�
                 {Object.entries(templates).map(([key, template]) => (
                   <button
                     key={key}
-                    onClick={() => insertTemplate(key as keyof typeof templates)}
+                    onClick={() => {
+                      insertTemplate(key as keyof typeof templates);
+                      showNotificationMessage(`${template.title}を挿入しました`, 'info');
+                    }}
                     className="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors duration-200"
                   >
                     {template.title}
@@ -487,11 +510,27 @@ ${content.substring(0, 100)}...の内容をAIが清書・構造化しました�
               </div>
             </div>
 
+            {/* カテゴリー選択 */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                カテゴリー
+              </label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="calculation">算定</option>
+                <option value="clinic">クリニック</option>
+                <option value="checkup">健診</option>
+              </select>
+            </div>
+
             {/* メインテキストエリア */}
             <textarea
               id="manualContentInput"
-              value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
+              value={originalText}
+              onChange={(e) => setOriginalText(e.target.value)}
               className="w-full h-96 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               placeholder="マニュアルの内容を自由に記述してください。
 
@@ -519,10 +558,10 @@ ${content.substring(0, 100)}...の内容をAIが清書・構造化しました�
               
               <button
                 onClick={proceedToStep2}
-                disabled={!userInput.trim()}
+                disabled={!originalText.trim()}
                 className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
               >
-                GPTで清書
+                Difyで清書
                 <ArrowRight className="h-4 w-4" />
               </button>
             </div>
@@ -536,14 +575,14 @@ ${content.substring(0, 100)}...の内容をAIが清書・構造化しました�
           <div className="bg-white rounded-xl shadow-lg p-6">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <FileText className="h-5 w-5 text-green-600" />
-              Step 2: GPT-4oによる清書結果
+              Step 2: Difyワークフローによる清書結果
             </h2>
 
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="text-center">
                   <Loader className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
-                  <p className="text-gray-600">GPT-4oで内容を清書・構造化中...</p>
+                  <p className="text-gray-600">Difyワークフローで内容を清書・構造化中...</p>
                   <div className="flex justify-center mt-2">
                     <div className="flex space-x-1">
                       <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
@@ -557,17 +596,17 @@ ${content.substring(0, 100)}...の内容をAIが清書・構造化しました�
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* 元の内容 */}
                 <div>
-                  <h3 className="font-semibold text-gray-700 mb-3">元の内容</h3>
+                  <h3 className="font-semibold text-gray-700 mb-3">【元の内容】</h3>
                   <div className="bg-gray-50 rounded-lg p-4 h-96 overflow-y-auto">
                     <pre className="whitespace-pre-wrap text-sm text-gray-700">
-                      {userInput}
+                      {originalText}
                     </pre>
                   </div>
                 </div>
 
                 {/* 清書後の内容 */}
                 <div>
-                  <h3 className="font-semibold text-gray-700 mb-3">清書後の内容</h3>
+                  <h3 className="font-semibold text-gray-700 mb-3">【清書後の内容】</h3>
                   <div className="bg-green-50 rounded-lg p-4 h-96 overflow-y-auto">
                     <div className="prose prose-sm max-w-none">
                       <pre className="whitespace-pre-wrap text-sm text-gray-800">
@@ -593,7 +632,7 @@ ${content.substring(0, 100)}...の内容をAIが清書・構造化しました�
                 <div className="flex gap-3">
                   <button
                     onClick={() => {
-                      setUserInput(refinedContent);
+                      setOriginalText(refinedContent);
                       setCurrentStep(1);
                     }}
                     className="px-6 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors"
@@ -603,9 +642,9 @@ ${content.substring(0, 100)}...の内容をAIが清書・構造化しました�
                   
                   <button
                     onClick={proceedToStep3}
-                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                    className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
                   >
-                    スライド生成
+                    管理者に申請
                     <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
@@ -615,25 +654,25 @@ ${content.substring(0, 100)}...の内容をAIが清書・構造化しました�
         </div>
       )}
 
-      {/* Step 3: スライド生成完了 */}
+      {/* Step 3: 申請完了 */}
       {currentStep === 3 && (
         <div className="space-y-6">
           <div className="bg-white rounded-xl shadow-lg p-6">
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-green-600" />
-              Step 3: HTMLスライド生成完了
+              Step 3: 管理者申請完了
             </h2>
 
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="text-center">
-                  <Loader className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
-                  <p className="text-gray-600">Claude 3.5 SonnetでHTMLスライドを生成中...</p>
+                  <Loader className="h-8 w-8 animate-spin text-green-600 mx-auto mb-4" />
+                  <p className="text-gray-600">管理者に申請を送信中...</p>
                   <div className="flex justify-center mt-2">
                     <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                      <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                      <div className="w-2 h-2 bg-green-600 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-green-600 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                      <div className="w-2 h-2 bg-green-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                     </div>
                   </div>
                 </div>
@@ -644,41 +683,41 @@ ${content.substring(0, 100)}...の内容をAIが清書・構造化しました�
                   <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <CheckCircle className="h-10 w-10 text-green-600" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">マニュアル生成完了！</h3>
-                  <p className="text-gray-600">プロフェッショナルなHTMLスライドが生成されました</p>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">申請が完了しました！</h3>
+                  <p className="text-gray-600">管理者による承認とHTMLスライド生成をお待ちください</p>
                 </div>
 
-                {/* プレビューカード */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-6 border border-blue-200">
+                {/* 申請内容カード */}
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 mb-6 border border-green-200">
                   <div className="flex items-center justify-center mb-4">
                     <div className="bg-white rounded-lg p-4 shadow-md">
-                      <FileText className="h-12 w-12 text-blue-600" />
+                      <FileText className="h-12 w-12 text-green-600" />
                     </div>
                   </div>
-                  <h4 className="font-semibold text-gray-900 mb-2">HTMLスライドマニュアル</h4>
+                  <h4 className="font-semibold text-gray-900 mb-2">申請内容</h4>
                   <p className="text-sm text-gray-600 mb-4">
-                    Claude 3.5 Sonnetによって生成された高品質なマニュアルスライド
+                    Difyで清書されたマニュアル内容が管理者に送信されました
                   </p>
-                  <div className="flex justify-center gap-3">
-                    <button
-                      onClick={showPreview}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                    >
-                      <Eye className="h-4 w-4" />
-                      プレビュー
-                    </button>
-                    <button
-                      onClick={downloadSlides}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-                    >
-                      <Download className="h-4 w-4" />
-                      ダウンロード
-                    </button>
+                  <div className="bg-white rounded-lg p-4 text-left">
+                    <h5 className="font-medium text-gray-700 mb-2">清書内容プレビュー:</h5>
+                    <p className="text-sm text-gray-600 line-clamp-3">
+                      {refinedContent.substring(0, 150)}...
+                    </p>
+                  </div>
+                </div>
+
+                {/* 次のステップの案内 */}
+                <div className="bg-blue-50 rounded-lg p-4 mb-6">
+                  <h5 className="font-medium text-blue-900 mb-2">次のステップ</h5>
+                  <div className="text-sm text-blue-700 space-y-1">
+                    <p>1. 管理者が申請内容を確認します</p>
+                    <p>2. 承認後、ClaudeでHTMLスライドが生成されます</p>
+                    <p>3. 完成したマニュアルがNotionに保存されます</p>
                   </div>
                 </div>
 
                 {/* アクションボタン */}
-                <div className="flex justify-between">
+                <div className="flex justify-center gap-4">
                   <button
                     onClick={backToStep2}
                     className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
@@ -688,11 +727,15 @@ ${content.substring(0, 100)}...の内容をAIが清書・構造化しました�
                   </button>
                   
                   <button
-                    onClick={saveToManuals}
-                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                    onClick={() => {
+                      setCurrentStep(1);
+                      setOriginalText('');
+                      setRefinedContent('');
+                    }}
+                    className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
                   >
-                    <Save className="h-4 w-4" />
-                    マニュアルに保存
+                    <Plus className="h-4 w-4" />
+                    新しいマニュアル作成
                   </button>
                 </div>
               </div>

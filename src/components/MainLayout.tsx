@@ -13,7 +13,9 @@ import {
   Folder,
   Settings,
   ExternalLink,
-  GraduationCap
+  GraduationCap,
+  Shield,
+  Clock
 } from 'lucide-react';
 
 interface MainLayoutProps {
@@ -23,7 +25,7 @@ interface MainLayoutProps {
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const [isDisclaimerOpen, setIsDisclaimerOpen] = useState(false);
 
   const menuItems = [
@@ -40,9 +42,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       category: 'main'
     },
     {
+      path: '/application-status',
+      icon: Clock,
+      label: '申請状況',
+      category: 'main'
+    },
+    {
       path: '/manual-management',
       icon: FolderOpen,
-      label: 'マニュアル管理',
+      label: 'マニュアルライブラリ',
       category: 'main'
     }
   ];
@@ -61,13 +69,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
   return (
     <div className="h-screen flex flex-col">
-      <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 py-3 px-6 shadow-sm">
+      <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 py-3 px-6 shadow-sm flex-shrink-0">
         <div className="text-sm font-medium text-gray-600">しおや消化器内科クリニック</div>
       </header>
       
-      <div className="flex-1 flex overflow-hidden">
-        <aside className="w-64 h-full hidden md:block">
-          <div className="h-full flex flex-col bg-gradient-to-b from-slate-900 via-blue-900 to-slate-900">
+      <div className="flex-1 flex min-h-0">
+        <aside className="w-64 flex-shrink-0 hidden md:block">
+          <div className="h-full flex flex-col bg-gradient-to-b from-slate-900 via-blue-900 to-slate-900 overflow-y-auto">
             <div className="flex items-center gap-2 px-6 py-5 border-b border-white/10">
               <Logo />
             </div>
@@ -91,6 +99,26 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                   <span className="font-medium">{item.label}</span>
                 </button>
               ))}
+              
+              {/* 管理者メニュー */}
+              {user?.role === 'admin' && (
+                <>
+                  <div className="px-6 py-3 mt-4 text-amber-400 font-semibold text-sm uppercase tracking-wider">
+                    管理者機能
+                  </div>
+                  <button
+                    onClick={() => navigate('/admin')}
+                    className={`flex items-center gap-3 w-full px-6 py-4 text-left transition-all duration-300 ${
+                      isActive('/admin')
+                        ? 'bg-white/20 text-white border-l-4 border-amber-400 pl-5'
+                        : 'text-white/90 hover:bg-white/10 hover:pl-7'
+                    }`}
+                  >
+                    <Shield className="h-5 w-5" />
+                    <span className="font-medium">管理者ダッシュボード</span>
+                  </button>
+                </>
+              )}
             </div>
 
             <div className="px-6 py-4 border-t border-white/10">
@@ -106,7 +134,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                   <span className="truncate">当院HP</span>
                 </a>
                 <a
-                  href="https://drive.google.com/drive/u/2/folders/13v5e5oR_fC3okuHXH8HMiVPk0jGxKEZh"
+                  href="https://www.notion.so/1cd3f0bae9be80d39922ef80780358e1?v=1cd3f0bae9be80998c5b000c1f275343&source=copy_link"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 px-4 py-3 text-white/90 hover:text-white hover:bg-white/20 rounded-lg transition-all duration-300 bg-white/5 backdrop-blur-sm whitespace-nowrap hover:shadow-lg"
@@ -117,34 +145,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               </div>
             </div>
 
-            <div className="px-6 py-4 border-t border-white/10">
-              <div className="space-y-2">
-                <a
-                  href="https://docs.google.com/forms/d/e/1FAIpQLSdqLJaq2w1auyB99wGhGpOUxU3e-FW2mvzvlNFpnx42mDTrUw/viewform?usp=header"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between w-full px-4 py-3 text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300 hover:shadow-md"
-                >
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    <span>マニュアル作成依頼</span>
-                  </div>
-                  <ExternalLink className="h-4 w-4" />
-                </a>
-                <a
-                  href="https://docs.google.com/forms/d/e/1FAIpQLScckGgML-Wej_3ubd4kXqCjz3uX5w6kir4tDVIkCoU8-itKLw/viewform?usp=header"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between w-full px-4 py-3 text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300 hover:shadow-md"
-                >
-                  <div className="flex items-center gap-2">
-                    <Settings className="h-5 w-5" />
-                    <span>機能改善フォーム</span>
-                  </div>
-                  <ExternalLink className="h-4 w-4" />
-                </a>
-              </div>
-            </div>
             
             <div className="mt-auto border-t border-white/10 p-6 space-y-3">
               <button
@@ -166,7 +166,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           </div>
         </aside>
         
-        <main className="flex-1 h-full overflow-hidden bg-gradient-to-br from-gray-50 to-white">
+        <main className="flex-1 overflow-auto bg-gradient-to-br from-gray-50 to-white">
           {children}
         </main>
       </div>

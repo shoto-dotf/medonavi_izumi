@@ -33,7 +33,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // For demo purposes, we're using hardcoded credentials
     if (userId === 'shioya0001CL' && password === 'shioya0001CL') {
       setIsAuthenticated(true);
-      setUser({ id: userId, name: 'Shioya' });
+      setUser({ id: userId, name: 'Shioya', role: 'staff' });
+      return true;
+    }
+    if (userId === 'admin' && password === 'admin') {
+      setIsAuthenticated(true);
+      setUser({ id: userId, name: 'Administrator', role: 'admin' });
       return true;
     }
     return false;
