@@ -6,6 +6,8 @@ import Login from './pages/Login';
 import ChatPage from './pages/ChatPage';
 import ManualCreation from './pages/ManualCreation';
 import ManualManagement from './pages/ManualManagement';
+import ManualManagementSimple from './pages/ManualManagementSimple';
+import ManualManagementTable from './pages/ManualManagementTable';
 import AdminDashboard from './pages/AdminDashboard';
 import ApplicationStatus from './pages/ApplicationStatus';
 import NotionCallback from './pages/NotionCallback';
@@ -41,7 +43,14 @@ const AppContent: React.FC = () => {
         <Route path="/manual-management" element={
           <ProtectedRoute>
             <MainLayout>
-              <ManualManagement />
+              <ManualManagementTable />
+            </MainLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/manual-simple" element={
+          <ProtectedRoute>
+            <MainLayout>
+              <ManualManagementSimple />
             </MainLayout>
           </ProtectedRoute>
         } />

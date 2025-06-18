@@ -70,36 +70,41 @@ class NotionAPI {
   // Notionデータベースから全マニュアルを取得
   async fetchManualDatabase(databaseId: string): Promise<NotionIntegration[]> {
     if (!this.apiKey) {
+      console.error('No API key provided');
       throw new Error('Notion API key is required');
     }
 
     try {
-      console.log('Fetching from Notion Database:', databaseId);
+      console.log('=== Notion API fetchManualDatabase ===');
+      console.log('Database ID:', databaseId);
+      console.log('API Key exists:', !!this.apiKey);
       
-      // 本番環境ではNetlify Functionsを使用
-      const isProduction = window.location.hostname !== 'localhost';
-      const apiUrl = isProduction 
-        ? `/.netlify/functions/notion-proxy?database_id=${databaseId}`
-        : `${this.baseURL}/databases/${databaseId}/query`;
+      // 開発環境では直接Notion APIを使用
+      const apiUrl = `${this.baseURL}/databases/${databaseId}/query`;
+      console.log('API URL:', apiUrl);
+      
+      const requestBody = {
+        sorts: [
+          {
+            property: "マニュアル名",
+            direction: "ascending"
+          }
+        ]
+      };
+      console.log('Request body:', requestBody);
       
       const response = await fetch(apiUrl, {
         method: 'POST',
-        headers: isProduction ? {
-          'Content-Type': 'application/json'
-        } : {
+        headers: {
           'Authorization': `Bearer ${this.apiKey}`,
           'Notion-Version': '2022-06-28',
           'Content-Type': 'application/json'
         },
-        body: isProduction ? undefined : JSON.stringify({
-          sorts: [
-            {
-              property: "マニュアル名",
-              direction: "ascending"
-            }
-          ]
-        })
+        body: JSON.stringify(requestBody)
       });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -108,25 +113,46 @@ class NotionAPI {
       }
 
       const data = await response.json();
-      console.log('Notion API Response:', data);
+      console.log('Notion API Response structure:', {
+        hasResults: !!data.results,
+        resultsLength: data.results?.length || 0,
+        hasMore: data.has_more,
+        nextCursor: data.next_cursor
+      });
+      
+      if (data.results && data.results.length > 0) {
+        console.log('First result sample:', JSON.stringify(data.results[0], null, 2));
+      }
       
       if (!data.results || !Array.isArray(data.results)) {
         throw new Error('Invalid response format from Notion API');
       }
 
-      return this.convertDatabaseToManuals(data.results);
+      const convertedResults = this.convertDatabaseToManuals(data.results);
+      console.log('Converted results count:', convertedResults.length);
+      return convertedResults;
     } catch (error) {
       console.error('Notion database fetch error:', error);
+      
+      // CORS エラーかどうかをチェック
+      if (error.message.includes('CORS') || error.message.includes('Access-Control') || 
+          error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+        console.warn('CORS error detected, this is expected in development. In production, use Netlify Functions.');
+      }
+      
       throw error; // エラーを再スローして呼び出し元で処理
     }
   }
 
   // データベースの結果をマニュアル形式に変換
   private convertDatabaseToManuals(pages: any[]): NotionIntegration[] {
-    return pages.map(page => {
+    console.log('=== Converting Database Pages ===');
+    console.log('Pages to convert:', pages.length);
+    
+    return pages.map((page, index) => {
       const properties = page.properties;
       
-      return {
+      const manual = {
         id: page.id,
         title: this.extractManualTitle(properties),
         url: this.extractUrl(properties) || page.url,
@@ -136,6 +162,26 @@ class NotionAPI {
         status: 'synced' as const,
         lastModified: page.last_edited_time
       };
+      
+      if (index === 0) { // Log only first page for detailed debugging
+        console.log(`=== DETAILED PAGE 1 ANALYSIS ===`);
+        console.log('Full page object:', page);
+        console.log('Properties object:', properties);
+        console.log('Property keys:', Object.keys(properties));
+        console.log('Title extraction result:', this.extractManualTitle(properties));
+        console.log('URL extraction result:', this.extractUrl(properties));
+        console.log('Category extraction result:', this.extractCategory(properties));
+        console.log('Converted manual:', manual);
+        
+        // URLフィールドの詳細デバッグ
+        console.log('=== URL FIELD DEBUG ===');
+        console.log('マニュアル (URL) field:', properties['マニュアル (URL)']);
+        console.log('マニュアル（URL） field:', properties['マニュアル（URL）']);
+        console.log('マニュアルURL field:', properties['マニュアルURL']);
+        console.log(`=== END PAGE 1 ANALYSIS ===`);
+      }
+      
+      return manual;
     });
   }
 
@@ -228,29 +274,43 @@ class NotionAPI {
 
   // プロパティからURLを抽出
   private extractUrl(properties: any): string | null {
-    // Notionデータベースのカラム名に基づいて抽出
-    console.log('Available properties:', Object.keys(properties));
-    
-    // マニュアル（URL）カラムから抽出 - URL型の場合（最優先）
-    if (properties['マニュアル（URL）'] && properties['マニュアル（URL）'].url) {
-      console.log('Found URL in マニュアル（URL）:', properties['マニュアル（URL）'].url);
-      return properties['マニュアル（URL）'].url;
+    // マニュアル (URL)カラムから抽出 - ファイル型の場合（最優先、全角スペース版）
+    if (properties['マニュアル (URL)'] && properties['マニュアル (URL)'].files && properties['マニュアル (URL)'].files.length > 0) {
+      return properties['マニュアル (URL)'].files[0].file?.url || properties['マニュアル (URL)'].files[0].external?.url;
     }
     
-    // マニュアル (URL) カラムから抽出 - 空白ありバージョン
+    // マニュアル (URL)カラムから抽出 - URL型の場合（全角スペース版）
     if (properties['マニュアル (URL)'] && properties['マニュアル (URL)'].url) {
-      console.log('Found URL in マニュアル (URL):', properties['マニュアル (URL)'].url);
       return properties['マニュアル (URL)'].url;
     }
     
-    // ファイル型の場合
+    // マニュアル（URL）カラムから抽出 - ファイル型の場合（括弧版）
     if (properties['マニュアル（URL）'] && properties['マニュアル（URL）'].files && properties['マニュアル（URL）'].files.length > 0) {
       return properties['マニュアル（URL）'].files[0].file?.url || properties['マニュアル（URL）'].files[0].external?.url;
     }
     
-    // fallback
-    if (properties['URL'] && properties['URL'].url) {
-      return properties['URL'].url;
+    // マニュアル（URL）カラムから抽出 - URL型の場合（括弧版）
+    if (properties['マニュアル（URL）'] && properties['マニュアル（URL）'].url) {
+      return properties['マニュアル（URL）'].url;
+    }
+    
+    // fallback - マニュアルURLプロパティ (ファイル型)
+    if (properties['マニュアルURL'] && properties['マニュアルURL'].files && properties['マニュアルURL'].files.length > 0) {
+      return properties['マニュアルURL'].files[0].file?.url || properties['マニュアルURL'].files[0].external?.url;
+    }
+    
+    // fallback - マニュアルURLプロパティ (URL型)
+    if (properties['マニュアルURL'] && properties['マニュアルURL'].url) {
+      return properties['マニュアルURL'].url;
+    }
+    
+    // 清書URLを代用
+    if (properties['清書URL'] && properties['清書URL'].files && properties['清書URL'].files.length > 0) {
+      return properties['清書URL'].files[0].file?.url || properties['清書URL'].files[0].external?.url;
+    }
+    
+    if (properties['清書URL'] && properties['清書URL'].url) {
+      return properties['清書URL'].url;
     }
     
     return null;
@@ -273,24 +333,56 @@ class NotionAPI {
 
   // プロパティからカテゴリを抽出
   private extractCategory(properties: any): string {
-    if (properties['カテゴリー'] && properties['カテゴリー'].select) {
-      const category = properties['カテゴリー'].select.name;
+    console.log('Available property keys:', Object.keys(properties));
+    console.log('Category property:', properties['カテゴリー']);
+    
+    // カテゴリープロパティから抽出 - multi_select の場合
+    if (properties['カテゴリー'] && properties['カテゴリー'].multi_select && properties['カテゴリー'].multi_select.length > 0) {
+      const category = properties['カテゴリー'].multi_select[0].name;
+      console.log('Found multi_select category:', category);
+      
       // カテゴリをシステム用に変換
       switch (category) {
         case '算定': return 'calculation';
         case 'クリニック業務': return 'clinic';
+        case 'クリニック': return 'clinic';
         case '健診業務': return 'checkup';
-        default: return 'other';
+        case '健診': return 'checkup';
+        default: 
+          console.log('Unknown category:', category);
+          return 'other';
       }
     }
+    
+    // カテゴリープロパティから抽出 - select の場合
+    if (properties['カテゴリー'] && properties['カテゴリー'].select && properties['カテゴリー'].select.name) {
+      const category = properties['カテゴリー'].select.name;
+      console.log('Found select category:', category);
+      
+      // カテゴリをシステム用に変換
+      switch (category) {
+        case '算定': return 'calculation';
+        case 'クリニック業務': return 'clinic';
+        case 'クリニック': return 'clinic';
+        case '健診業務': return 'checkup';
+        case '健診': return 'checkup';
+        default: 
+          console.log('Unknown category:', category);
+          return 'other';
+      }
+    }
+    
+    console.log('No category found, defaulting to other');
     return 'other';
   }
 
   // マニュアル名を抽出
   private extractManualTitle(properties: any): string {
-    if (properties['マニュアル名'] && properties['マニュアル名'].title) {
-      return properties['マニュアル名'].title[0]?.plain_text || 'Untitled';
+    if (properties['マニュアル名'] && properties['マニュアル名'].title && properties['マニュアル名'].title.length > 0) {
+      const title = properties['マニュアル名'].title[0]?.plain_text || 'Untitled';
+      return title;
     }
+    console.warn('Could not extract title from properties:', properties['マニュアル名']);
     return 'Untitled';
   }
 
