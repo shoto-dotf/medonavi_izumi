@@ -17,17 +17,73 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   useEffect(() => {
     const loadManuals = async () => {
       try {
-        const notionAPI = getNotionAPI();
-        const manualData = await notionAPI.fetchManualDatabase('DATABASE_ID');
+        // Netlify Functions経由でNotionデータを取得
+        const response = await fetch('/.netlify/functions/notion-proxy', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            action: 'queryDatabase',
+            databaseId: import.meta.env.VITE_NOTION_DATABASE_ID
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
         
-        const convertedManuals: Manual[] = manualData.map((manual: any) => ({
-          id: manual.id,
-          title: manual.title,
-          category: manual.category,
-          url: manual.url,
-          lastSync: manual.lastSync,
-          status: manual.status
-        }));
+        const convertedManuals: Manual[] = data.results.map((page: any) => {
+          const properties = page.properties;
+          
+          // URLの抽出 - マニュアル (URL) カラムから
+          let url = page.url; // デフォルトはNotionページのURL
+          if (properties['マニュアル (URL)']) {
+            if (properties['マニュアル (URL)'].files && properties['マニュアル (URL)'].files.length > 0) {
+              url = properties['マニュアル (URL)'].files[0].file?.url || properties['マニュアル (URL)'].files[0].external?.url;
+            } else if (properties['マニュアル (URL)'].url) {
+              url = properties['マニュアル (URL)'].url;
+            }
+          }
+          
+          // カテゴリーの抽出
+          let category = 'other';
+          if (properties['カテゴリー'] && properties['カテゴリー'].multi_select) {
+            const categories = properties['カテゴリー'].multi_select;
+            if (categories.length > 0) {
+              const categoryMap: { [key: string]: string } = {
+                '算定': 'medical',
+                'クリニック業務': 'reception',
+                '健診': 'health-check'
+              };
+              category = categoryMap[categories[0].name] || 'other';
+            }
+          } else if (properties['カテゴリー'] && properties['カテゴリー'].select) {
+            const categoryMap: { [key: string]: string } = {
+              '算定': 'medical',
+              'クリニック業務': 'reception',
+              '健診': 'health-check'
+            };
+            category = categoryMap[properties['カテゴリー'].select.name] || 'other';
+          }
+          
+          // タイトルの抽出
+          let title = 'タイトルなし';
+          if (properties['マニュアル名'] && properties['マニュアル名'].title && properties['マニュアル名'].title.length > 0) {
+            title = properties['マニュアル名'].title.map((t: any) => t.plain_text).join('');
+          }
+          
+          return {
+            id: page.id,
+            title: title,
+            category: category,
+            url: url,
+            lastSync: page.last_edited_time || new Date().toISOString(),
+            status: 'synced' as const
+          };
+        });
         
         setManuals(convertedManuals);
         setAvailableManuals(convertedManuals);
