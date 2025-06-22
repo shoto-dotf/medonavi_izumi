@@ -65,7 +65,7 @@ export const fetchDifyRefinement = async (originalText: string): Promise<string>
     
     console.log('Workflow request body:', JSON.stringify(requestBody));
     
-    const response = await fetch(WORKFLOW_API_ENDPOINT, {
+    const response = await fetch(`${WORKFLOW_API_ENDPOINT}/${WORKFLOW_ID}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

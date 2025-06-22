@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, ArrowRight, Save, FileText, CheckCircle, Download, Eye, Loader, Plus } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Save, FileText, CheckCircle, Loader, Plus } from 'lucide-react';
 import { fetchDifyRefinement } from '../api/dify';
 import { createApplication } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -242,7 +242,7 @@ A8: [回答を記載]`
   };
 
   // モックデータ生成関数（スライド生成用）
-  const generateMockSlideHTML = (content: string): string => {
+  const generateMockSlideHTML = (): string => {
     return `<!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -349,31 +349,8 @@ A8: [回答を記載]`
     }, 5000);
   };
 
-  // プレビュー表示
-  const showPreview = () => {
-    const previewWindow = window.open('', '_blank', 'width=1000,height=700');
-    if (previewWindow) {
-      previewWindow.document.write(window.generatedSlideHTML);
-      previewWindow.document.close();
-    }
-  };
 
-  // ダウンロード機能
-  const downloadSlides = () => {
-    const blob = new Blob([window.generatedSlideHTML], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'manual-slides.html';
-    a.click();
-    URL.revokeObjectURL(url);
-  };
 
-  // マニュアル管理に保存
-  const saveToManuals = () => {
-    // TODO: マニュアル管理システムとの統合
-    showNotificationMessage('マニュアルが保存されました', 'success');
-  };
 
   return (
     <div className="max-w-6xl mx-auto p-6">
@@ -547,23 +524,21 @@ A8: [回答を記載]`
                 {/* 元の内容 */}
                 <div>
                   <h3 className="font-semibold text-gray-700 mb-3">【元の内容】</h3>
-                  <div className="bg-gray-50 rounded-lg p-4 h-96 overflow-y-auto">
-                    <pre className="whitespace-pre-wrap text-sm text-gray-700">
-                      {originalText}
-                    </pre>
-                  </div>
+                  <textarea
+                    value={originalText}
+                    readOnly
+                    className="bg-gray-50 border border-gray-200 rounded-lg p-4 h-96 w-full resize-none text-sm text-gray-700 cursor-not-allowed"
+                  />
                 </div>
 
                 {/* 清書後の内容 */}
                 <div>
                   <h3 className="font-semibold text-gray-700 mb-3">【清書後の内容】</h3>
-                  <div className="bg-green-50 rounded-lg p-4 h-96 overflow-y-auto">
-                    <div className="prose prose-sm max-w-none">
-                      <pre className="whitespace-pre-wrap text-sm text-gray-800">
-                        {refinedContent}
-                      </pre>
-                    </div>
-                  </div>
+                  <textarea
+                    value={refinedContent}
+                    readOnly
+                    className="bg-green-50 border border-green-200 rounded-lg p-4 h-96 w-full resize-none text-sm text-gray-800 cursor-not-allowed"
+                  />
                 </div>
               </div>
             )}
