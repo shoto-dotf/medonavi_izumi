@@ -842,7 +842,7 @@ const ManualManagement: React.FC = () => {
                   className="py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 text-sm font-medium"
                 >
                   <ExternalLink className="h-4 w-4" />
-                  Notionで管理
+                  クラウドで管理
                 </button>
                 <button
                   onClick={() => {

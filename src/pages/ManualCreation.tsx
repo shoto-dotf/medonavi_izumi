@@ -474,7 +474,7 @@ A8: [回答を記載]`
                 disabled={!originalText.trim()}
                 className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
               >
-                Difyで清書
+                AIで清書
                 <ArrowRight className="h-4 w-4" />
               </button>
             </div>
@@ -482,7 +482,7 @@ A8: [回答を記載]`
         </div>
       )}
 
-      {/* Step 2: Dify清書結果 */}
+      {/* Step 2: AI清書結果 */}
       {currentStep === 2 && (
         <div className="space-y-6">
           <div className="bg-white rounded-xl shadow-lg p-6">
@@ -621,7 +621,7 @@ A8: [回答を記載]`
                   </div>
                   <h4 className="font-semibold text-gray-900 mb-2">申請内容</h4>
                   <p className="text-sm text-gray-600 mb-4">
-                    Difyで清書されたマニュアル内容が管理者に送信されました
+                    AIで清書されたマニュアル内容が管理者に送信されました
                   </p>
                   <div className="bg-white rounded-lg p-4 text-left">
                     <h5 className="font-medium text-gray-700 mb-2">清書内容プレビュー:</h5>
