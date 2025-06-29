@@ -431,7 +431,7 @@ const ManualManagement: React.FC = () => {
       console.log('Total converted manuals:', convertedManuals.length);
       setManuals(convertedManuals);
       console.log('Manuals state updated');
-      showNotification('Notionマニュアルの同期が完了しました', 'success');
+      showNotification('マニュアルの同期が完了しました', 'success');
       
     } catch (error) {
       console.error('=== Netlify Function error ===', error);
@@ -746,14 +746,14 @@ const ManualManagement: React.FC = () => {
       console.log('Total converted manuals:', convertedManuals.length);
       setManuals(convertedManuals);
       console.log('Manuals state updated');
-      showNotification('Notionマニュアルの同期が完了しました', 'success');
+      showNotification('マニュアルの同期が完了しました', 'success');
       
     } catch (error) {
       console.error('=== Notion manual sync error ===', error);
       console.error('Error type:', typeof error);
       console.error('Error message:', error.message);
       console.error('Error stack:', error.stack);
-      showNotification('Notionマニュアルの同期に失敗しました', 'error');
+      showNotification('マニュアルの同期に失敗しました', 'error');
       // エラー時はモックデータを表示
       const mockData = getMockManuals();
       console.log('Loading mock data due to error:', mockData.length, 'items');
@@ -819,16 +819,12 @@ const ManualManagement: React.FC = () => {
             <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4 mb-6">
               <div className="flex-1">
                 <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">マニュアルライブラリ</h1>
-                <p className="text-gray-600 mb-4">Notionから同期されたマニュアル一覧を表示しています</p>
+                <p className="text-gray-600 mb-4">クラウドから同期されたマニュアル一覧を表示しています</p>
                 <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-2 text-blue-800">
-                      <img 
-                        src="https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png" 
-                        alt="Notion" 
-                        className="w-5 h-5 flex-shrink-0"
-                      />
-                      <span className="font-medium text-sm lg:text-base">マニュアル作成・管理はNotionで行います</span>
+                      <FileText className="w-5 h-5 flex-shrink-0 text-blue-600" />
+                      <span className="font-medium text-sm lg:text-base">マニュアル作成・管理はクラウドで行います</span>
                     </div>
                     <span className="text-sm text-blue-600 bg-blue-100 px-2 py-1 rounded self-start">
                       {isNotionConnected ? '同期済み' : 'サンプルデータ'}
@@ -963,10 +959,10 @@ const ManualManagement: React.FC = () => {
                                     href={manual.notionUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 group/link"
+                                    className="text-xs text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 group/link break-all"
                                   >
                                     <Link className="h-3 w-3 flex-shrink-0" />
-                                    <span className="truncate">notion.so/...{manual.notionUrl.split('&p=')[1]?.split('&')[0]?.slice(-8) || 'ページ'}</span>
+                                    <span className="block">{manual.notionUrl}</span>
                                   </a>
                                 ) : (
                                   <span className="text-xs text-gray-400">URLが設定されていません</span>
